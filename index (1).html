@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Financiera – Ingeniería Económica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10302b;--ink2:#1c4a42;--paper:#f6f1e7;--card:#fffdf8;--line:#e2d9c6;--gold:#c8902e;--gold2:#f0c46a;--red:#b3261e;--ok:#1f7a4d;--txt:#22302d;--mut:#6b7772}
+*{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--paper);color:var(--txt);line-height:1.5}
+header{background:radial-gradient(900px 300px at 85% -20%,#2f7a6b55,transparent),linear-gradient(135deg,var(--ink),var(--ink2));color:#fff;padding:44px 20px 70px;position:relative;overflow:hidden}
+header:before{content:"$  %  Σ  i  n  VP  VF";position:absolute;right:-20px;top:10px;font:700 90px Fraunces,serif;color:#ffffff0d;white-space:nowrap}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+header .wrap{position:relative}
+h1{font-family:Fraunces,serif;font-size:clamp(28px,5vw,46px);margin:0 0 8px;letter-spacing:-.5px}
+header p{margin:0;max-width:620px;color:#d3e5df}
+.badge{display:inline-block;background:#ffffff1a;border:1px solid #ffffff33;border-radius:99px;padding:3px 12px;font-size:13px;margin-bottom:14px;color:var(--gold2)}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:-34px auto 18px;position:relative;z-index:2}
+nav button{flex:1 1 auto;border:1px solid var(--line);background:var(--card);padding:11px 14px;border-radius:12px;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 4px 14px #10302b14;transition:.15s}
+nav button:hover{transform:translateY(-2px)}
+nav button.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 10px 30px #10302b12;margin-bottom:24px}
+.card h2{font-family:Fraunces,serif;margin:0 0 4px;color:var(--ink);font-size:26px}
+.sub{color:var(--mut);margin:0 0 20px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:4px}
+input,select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font:15px 'IBM Plex Sans',sans-serif;color:var(--txt)}
+input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #c8902e30}
+.rate{grid-column:1/-1;background:#f3ede0;border:1px dashed #cdbf9f;border-radius:14px;padding:14px}
+.rate>b{display:block;font-size:13px;color:var(--ink);margin-bottom:8px}
+.rate .grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.hide{display:none!important}
+.go{margin-top:18px;background:linear-gradient(135deg,var(--ink),var(--ink2));color:#fff;border:0;padding:12px 28px;border-radius:12px;font:600 15px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.go:hover{filter:brightness(1.2)}
+.res{margin-top:18px;border-radius:14px;padding:16px 18px;display:none}
+.res.ok{display:block;background:#eaf5ee;border:1px solid #b7dcc4}
+.res.err{display:block;background:#fbeceb;border:1px solid #efb9b5;color:var(--red);font-weight:500}
+.res small{display:block;color:var(--mut)}
+.big{font:500 30px 'IBM Plex Mono',monospace;color:var(--ink);margin:2px 0 6px}
+.proc{font-size:13.5px;color:#3d4c48;border-top:1px dashed #b7dcc4;margin-top:8px;padding-top:8px}
+table{width:100%;border-collapse:collapse;font-size:14px;display:block;overflow-x:auto}
+th{background:var(--ink);color:#fff;padding:9px;text-align:left;white-space:nowrap}
+td{padding:9px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:13px}
+td:first-child,td:nth-child(2){font-family:'IBM Plex Sans'}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--red);font-weight:700}
+details{margin:8px 0;background:#f3ede0;border-radius:10px;padding:8px 12px;font-size:14px}summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.man p{margin:.5em 0}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:10px 0 40px}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="badge">Proyecto integrador · Ingeniería Económica</span>
+<h1>Calculadora Financiera</h1>
+<p>Interés compuesto, conversión de tasas, indexación (DTF, IBR, IPC, UVR), anualidades vencidas y anticipadas, y perpetuidades, con validación de resultados.</p></div></header>
+<main class="wrap">
+<nav id="nav"></nav>
+<section id="app"></section>
+<footer>Las tasas se escriben en % (ej. 24 = 24 %). Se admiten decimales con punto o coma.</footer>
+</main>
+<script>
+const P={diaria:365,semanal:52,quincenal:24,mensual:12,bimestral:6,trimestral:4,cuatrimestral:3,semestral:2,anual:1};
+const T={EV:"Efectiva vencida",EAn:"Efectiva anticipada",NV:"Nominal vencida",NAn:"Nominal anticipada"};
+const $=id=>document.getElementById(id);
+const num=s=>{s=String(s).trim().replace(/\s/g,'');if(s==='')return NaN;if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');else if((s.match(/\./g)||[]).length>1)s=s.replace(/\./g,'');return Number(s)};
+const money=x=>'$ '+x.toLocaleString('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=(x,d=6)=>(x*100).toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d})+' %';
+const dec=(x,d=4)=>x.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+class E extends Error{}
+const fail=m=>{throw new E(m)};
+
+/* ---- núcleo de tasas ---- */
+function toEA(v,t,p){ // v en %, retorna efectiva anual
+  const r=v/100,m=P[p];let ip;
+  if(!(r>=0))fail('La tasa debe ser un número mayor o igual a 0.');
+  if(t=='EV')ip=r;
+  else if(t=='EAn'){if(r>=1)fail('Una tasa efectiva anticipada debe ser menor a 100 %.');ip=r/(1-r)}
+  else if(t=='NV')ip=r/m;
+  else{const ia=r/m;if(ia>=1)fail('La tasa nominal anticipada por periodo debe ser menor a 100 %.');ip=ia/(1-ia)}
+  return Math.pow(1+ip,m)-1;
+}
+function fromEA(ea,t,p){
+  const m=P[p],ip=Math.pow(1+ea,1/m)-1;
+  return t=='EV'?ip:t=='EAn'?ip/(1+ip):t=='NV'?ip*m:ip/(1+ip)*m;
+}
+const ipOf=(ea,p)=>Math.pow(1+ea,1/P[p])-1;
+
+/* ---- generadores de campos ---- */
+const opts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+const per=()=>Object.keys(P).map(k=>`<option value="${k}"${k=='mensual'?' selected':''}>${cap(k)}</option>`).join('');
+const fld=(id,l,v='',ph='')=>`<div id="w_${id}"><label>${l}</label><input id="${id}" inputmode="decimal" value="${v}" placeholder="${ph}"></div>`;
+const sel=(id,l,o,extra='')=>`<div id="w_${id}"><label>${l}</label><select id="${id}" ${extra}>${o}</select></div>`;
+const rate=(id,title)=>`<div class="rate"><b>${title}</b><div class="grid">${fld(id+'v','Valor de la tasa (%)','','Ej. 24')}${sel(id+'t','Tipo de tasa',opts(T))}${sel(id+'p','Periodicidad de la tasa (nominal: capitalización)',per().replace(' selected',''))}</div></div>`;
+const readRate=id=>{const v=num($(id+'v').value);if(isNaN(v))fail('Ingrese el valor de la tasa.');return toEA(v,$(id+'t').value,$(id+'p').value)};
+const out=(id,html,err)=>{const e=$(id);e.className='res '+(err?'err':'ok');e.innerHTML=err?'⚠ '+html:html};
+const need=(id,name)=>{const v=num($(id).value);if(isNaN(v))fail(`Ingrese un valor numérico para ${name}.`);return v};
+const pos=(v,name)=>{if(!(v>0))fail(`${name} debe ser mayor que 0.`);return v};
+const run=(id,f)=>$(id).onclick=()=>{try{out('r_'+id,f())}catch(e){if(e instanceof E)out('r_'+id,e.message,1);else{console.error(e);out('r_'+id,'Datos inconsistentes. Revise los campos.',1)}}};
+const show=(id,on)=>$('w_'+id).classList.toggle('hide',!on);
+const result=(label,val,proc,extra='')=>`<small>Variable calculada: <b>${label}</b></small><div class="big">${val}</div>${extra}<div class="proc">${proc}</div>`;
+
+/* ---- funciones financieras puras (se reutilizan en la validación) ---- */
+const F={
+ vf:(vp,i,n)=>vp*Math.pow(1+i,n),
+ vp:(vf,i,n)=>vf/Math.pow(1+i,n),
+ annVP:(A,i,n,ant)=>A*(ant?1+i:1)*(1-Math.pow(1+i,-n))/i,
+ annVF:(A,i,n,ant)=>A*(ant?1+i:1)*(Math.pow(1+i,n)-1)/i,
+ perp:(A,i,ant)=>A*(ant?1+i:1)/i,
+ index:(ind,mod,v,s)=>{ // devuelve EA
+  if(ind=='IPC'||ind=='UVR')return(1+v/100)*(1+s/100)-1;
+  if(ind=='DTF')return toEA(v+s,'NAn','trimestral');
+  return mod=='EA'?(v+s)/100:toEA(v+s,'NV',mod=='NMV'?'mensual':'trimestral');
+ }
+};
+
+/* ---- módulos ---- */
+const mods={
+ic:{name:'Interés compuesto',html:()=>`<h2>Interés compuesto</h2><p class="sub">VF = VP·(1+i)ⁿ. La tasa se convierte automáticamente a la periodicidad del tiempo.</p>
+<div class="grid">${sel('ic_var','Variable a calcular',opts({VF:'Valor futuro (VF)',VP:'Valor presente (VP)',n:'Número de periodos (n)',i:'Tasa de interés (i)'}))}
+${fld('ic_vp','Valor presente VP ($)')}${fld('ic_vf','Valor futuro VF ($)')}${fld('ic_n','Número de periodos n')}${sel('ic_per','Periodicidad del tiempo (periodo de n)',per())}
+${rate('ic_r','Tasa de interés conocida')}</div><button class="go" id="ic">Calcular</button><div id="r_ic" class="res"></div>`,
+ init(){const u=()=>{const v=$('ic_var').value;show('ic_vp',v!='VP');show('ic_vf',v!='VF');show('ic_n',v!='n');$('ic_rv').closest('.rate').classList.toggle('hide',v=='i')};
+  $('ic_var').onchange=u;u();
+  run('ic',()=>{const v=$('ic_var').value,pr=$('ic_per').value;let vp,vf,n,ea,i;
+   if(v!='i')ea=readRate('ic_r'),i=ipOf(ea,pr);
+   if(v!='VP')vp=pos(need('ic_vp','VP'),'El valor presente');
+   if(v!='VF')vf=pos(need('ic_vf','VF'),'El valor futuro');
+   if(v!='n'){n=pos(need('ic_n','n'),'El número de periodos')}
+   const ti=i!==undefined?`<br>Tasa efectiva ${pr} usada: <b>${pct(i)}</b> (EA = ${pct(ea)})`:'';
+   if(v=='VF')return result('Valor futuro',money(F.vf(vp,i,n)),`VF = VP·(1+i)ⁿ${ti}`);
+   if(v=='VP')return result('Valor presente',money(F.vp(vf,i,n)),`VP = VF/(1+i)ⁿ${ti}`);
+   if(v=='n'){const r=Math.log(vf/vp)/Math.log(1+i);if(!isFinite(r)||r<=0)fail('Con esa tasa, VF debe ser mayor que VP (tasa positiva) para obtener n positivo.');return result('Número de periodos (n)',dec(r,4)+' periodos '+pr+'s',`n = ln(VF/VP)/ln(1+i)${ti}`)}
+   i=Math.pow(vf/vp,1/n)-1;ea=Math.pow(1+i,P[pr])-1;
+   return result('Tasa efectiva '+pr,pct(i),`i = (VF/VP)^(1/n) − 1`,`<small>Equivalente efectiva anual: <b>${pct(ea)}</b></small>`)})}},
+cv:{name:'Conversión de tasas',html:()=>`<h2>Conversión de tasas</h2><p class="sub">Convierte entre efectivas, nominales, vencidas y anticipadas pasando por la efectiva anual equivalente.</p>
+<div class="grid">${rate('cv_a','Tasa de origen')}${rate('cv_b','Convertir a (el valor se ignora)').replace(/<div id="w_cv_bv">.*?<\/div>/,'')}</div><button class="go" id="cv">Convertir</button><div id="r_cv" class="res"></div>`,
+ init(){run('cv',()=>{const ea=readRate('cv_a'),t=$('cv_bt').value,p=$('cv_bp').value;const r=fromEA(ea,t,p);
+  return result(`${T[t]} ${p}`,pct(r),`Se convierte la tasa de origen a EA = (1+i)^m − 1 y luego a la tasa pedida.`,`<small>Efectiva anual equivalente: <b>${pct(ea)}</b></small>`)})}},
+ix:{name:'Tasas indexadas',html:()=>`<h2>Tasas indexadas</h2><p class="sub">DTF (T.A.) e IBR: spread sumado en su misma modalidad. IPC y UVR: (1+indicador)(1+spread) − 1, en EA.</p>
+<div class="grid">${sel('ix_ind','Indicador',opts({DTF:'DTF (trimestre anticipado)',IBR:'IBR',IPC:'IPC',UVR:'UVR'}))}${sel('ix_mod','Modalidad del IBR',opts({NMV:'Nominal mensual vencida (NMV)',NTV:'Nominal trimestral vencida (NTV)',EA:'Efectiva anual (EA)'}))}
+${fld('ix_v','Tasa del indicador (%)','','Ej. 9.5')}${fld('ix_s','Puntos adicionales / spread (%)','','Ej. 3')}
+${rate('ix_o','Expresar resultado como (el valor se ignora)').replace(/<div id="w_ix_ov">.*?<\/div>/,'')}</div><button class="go" id="ix">Calcular tasa indexada</button><div id="r_ix" class="res"></div>`,
+ init(){$('ix_ind').onchange=()=>show('ix_mod',$('ix_ind').value=='IBR');$('ix_ind').onchange();
+  run('ix',()=>{const ind=$('ix_ind').value,v=need('ix_v','la tasa del indicador'),s=need('ix_s','el spread');if(v<0||s<0)fail('Tasa y spread no pueden ser negativos.');
+   const ea=F.index(ind,$('ix_mod').value,v,s),t=$('ix_ot').value,p=$('ix_op').value;
+   const pr={DTF:`(DTF + spread) T.A. = ${dec(v+s,4)} % T.A.`,IBR:`(IBR + spread) = ${dec(v+s,4)} % en su modalidad`,IPC:`(1+${v/100})(1+${s/100}) − 1`,UVR:`(1+${v/100})(1+${s/100}) − 1`}[ind];
+   return result(`${T[t]} ${p}`,pct(fromEA(ea,t,p)),`${pr}; EA = ${pct(ea)}; luego conversión de periodicidad.`,`<small>Efectiva anual indexada: <b>${pct(ea)}</b></small>`)})}},
+an:{name:'Anualidades',html:()=>`<h2>Anualidades vencidas y anticipadas</h2><p class="sub">Vencida: pago al final de cada periodo. Anticipada: pago al inicio (se multiplica por 1+i).</p>
+<div class="grid">${sel('an_t','Tipo de anualidad',opts({V:'Vencida',A:'Anticipada'}))}${sel('an_var','Variable a calcular',opts({VP:'Valor presente (VP)',VF:'Valor futuro (VF)',A:'Cuota (A)',n:'Número de cuotas (n)'}))}${sel('an_b','Con base en el dato conocido',opts({VP:'Valor presente',VF:'Valor futuro'}))}
+${fld('an_vp','Valor presente VP ($)')}${fld('an_vf','Valor futuro VF ($)')}${fld('an_a','Cuota A ($)')}${fld('an_n','Número de cuotas n')}${sel('an_per','Periodicidad de la cuota',per())}
+${rate('an_r','Tasa de interés')}</div><button class="go" id="an">Calcular</button><div id="r_an" class="res"></div>`,
+ init(){const u=()=>{const v=$('an_var').value,b=$('an_b').value,x=v=='A'||v=='n';show('an_b',x);show('an_vp',x&&b=='VP');show('an_vf',x&&b=='VF');show('an_a',v!='A');show('an_n',v!='n')};
+  ['an_var','an_b'].forEach(k=>$(k).onchange=u);u();
+  run('an',()=>{const v=$('an_var').value,b=$('an_b').value,ant=$('an_t').value=='A',pr=$('an_per').value,ea=readRate('an_r'),i=ipOf(ea,pr);
+   pos(i,'La tasa por periodo');const k=ant?1+i:1;let vp,vf,A,n;
+   if(v!='A')A=pos(need('an_a','la cuota'),'La cuota');if(v!='n')n=pos(need('an_n','n'),'El número de cuotas');
+   if(v=='A'||v=='n'){if(b=='VP')vp=pos(need('an_vp','VP'),'El valor presente');else vf=pos(need('an_vf','VF'),'El valor futuro')}
+   const tn=ant?'anticipada':'vencida',ti=`<br>Tasa efectiva ${pr} usada: <b>${pct(i)}</b> (EA = ${pct(ea)}). Anualidad ${tn}.`,fk=ant?'·(1+i)':'';
+   if(v=='VP')return result('Valor presente',money(F.annVP(A,i,n,ant)),`VP = A${fk}·[1−(1+i)^−n]/i${ti}`);
+   if(v=='VF')return result('Valor futuro',money(F.annVF(A,i,n,ant)),`VF = A${fk}·[(1+i)ⁿ−1]/i${ti}`);
+   if(v=='A'){const r=b=='VP'?vp*i/(k*(1-Math.pow(1+i,-n))):vf*i/(k*(Math.pow(1+i,n)-1));return result('Cuota (A)',money(r),b=='VP'?`A = VP·i/{${ant?'(1+i)·':''}[1−(1+i)^−n]}${ti}`:`A = VF·i/{${ant?'(1+i)·':''}[(1+i)ⁿ−1]}${ti}`)}
+   let r;if(b=='VP'){const x=1-vp*i/(A*k);if(x<=0)fail('Inconsistente: VP·i ≥ A, la cuota no alcanza ni para cubrir los intereses (no existe n).');r=-Math.log(x)/Math.log(1+i)}
+   else r=Math.log(1+vf*i/(A*k))/Math.log(1+i);
+   return result('Número de cuotas (n)',dec(r,4)+' cuotas '+pr+'s',`n = ${b=='VP'?'−ln[1−VP·i/(A'+(ant?'·(1+i)':'')+')]':'ln[1+VF·i/(A'+(ant?'·(1+i)':'')+')]'}/ln(1+i)${ti}`,r%1?`<small>No es entero: ≈ ${Math.ceil(r)} cuotas completas (la última, ajustada).</small>`:'')})}},
+pp:{name:'Perpetuidad',html:()=>`<h2>Anualidad perpetua</h2><p class="sub">Vencida: VP = A/i. Anticipada: VP = A·(1+i)/i.</p>
+<div class="grid">${sel('pp_t','Tipo',opts({V:'Vencida',A:'Anticipada'}))}${sel('pp_var','Variable a calcular',opts({VP:'Capital requerido (VP)',A:'Pago periódico sostenible (A)'}))}
+${fld('pp_vp','Capital VP ($)')}${fld('pp_a','Pago periódico A ($)')}${sel('pp_per','Periodicidad del pago',per())}${rate('pp_r','Tasa de interés')}</div>
+<button class="go" id="pp">Calcular</button><div id="r_pp" class="res"></div>`,
+ init(){const u=()=>{const v=$('pp_var').value;show('pp_vp',v=='A');show('pp_a',v=='VP')};$('pp_var').onchange=u;u();
+  run('pp',()=>{const v=$('pp_var').value,ant=$('pp_t').value=='A',pr=$('pp_per').value,ea=readRate('pp_r'),i=pos(ipOf(ea,pr),'La tasa por periodo');
+   const ti=`<br>Tasa efectiva ${pr} usada: <b>${pct(i)}</b> (EA = ${pct(ea)}).`;
+   if(v=='VP')return result('Capital requerido (VP)',money(F.perp(pos(need('pp_a','A'),'El pago'),i,ant)),`VP = A${ant?'·(1+i)':''}/i${ti}`);
+   const vp=pos(need('pp_vp','VP'),'El capital');return result('Pago periódico sostenible (A)',money(vp*i/(ant?1+i:1)),`A = VP·i${ant?'/(1+i)':''}${ti}`)})}},
+va:{name:'Validación',html:()=>`<h2>Matriz de validación</h2><p class="sub">Resultado independiente = procedimiento hecho a mano (fuera de la calculadora). La columna de la calculadora se calcula en vivo con las mismas funciones de la herramienta. Tolerancia de redondeo: 0,01.</p><table id="vt"></table><div id="vd"></div>`,
+ init(){
+  const V=[
+   ['Interés compuesto',()=>F.vf(8e6,ipOf(.12,'trimestral'),6),9482372.70,
+    'VP = $8.000.000; tasa 12 % EA; n = 6 trimestres. Incógnita: VF.','i trim = 1,12^(1/4) − 1 = 2,8737 %; VF = 8.000.000·(1,12)^(6/4) = 9.482.372,70'],
+   ['Conversión e indexación',()=>fromEA(F.index('IPC','',5.2,4),'NV','mensual')*100,9.025152,
+    'IPC = 5,2 % EA más spread 4 %. Expresar como nominal mensual vencida (resultado en %).','EA = (1,052)(1,04) − 1 = 9,408 %; i mensual = 1,09408^(1/12) − 1 = 0,75210 %; NMV = 12·i = 9,025152 %'],
+   ['Anualidad vencida',()=>F.annVP(5e5,.18/12,24,false),10015202.68,
+    'Cuotas de $500.000 mensuales vencidas durante 24 meses, 18 % NMV. Incógnita: VP.','i = 18/12 = 1,5 % mensual; VP = 500.000·[1 − 1,015^−24]/0,015 = 10.015.202,68'],
+   ['Anualidad anticipada',()=>F.annVF(3e5,ipOf(.15,'mensual'),36,true),13495025.47,
+    'Cuotas de $300.000 mensuales anticipadas durante 36 meses, 15 % EA. Incógnita: VF.','i = 1,15^(1/12) − 1 = 1,1715 %; VF = 300.000·(1+i)·[(1+i)^36 − 1]/i = 13.495.025,47'],
+   ['Anualidad perpetua',()=>F.perp(2e6,ipOf(.12,'mensual'),false),210774965.14,
+    'Pago de $2.000.000 mensuales vencidos a perpetuidad, 12 % EA. Incógnita: capital VP.','i = 1,12^(1/12) − 1 = 0,94888 %; VP = A/i = 2.000.000/0,0094888 = 210.774.965,14']];
+  let h='<tr><th>Prueba</th><th>Módulo validado</th><th>Resultado independiente</th><th>Resultado calculadora</th><th>Diferencia</th><th>Validado</th></tr>',d='';
+  V.forEach((x,k)=>{const c=x[1](),df=Math.abs(c-x[2]),ok=df<(k==1?1e-5:.01);
+   h+=`<tr><td>${k+1}</td><td>${x[0]}</td><td>${dec(x[2],k==1?6:2)}</td><td>${dec(c,k==1?6:2)}</td><td>${dec(df,k==1?6:2)}</td><td class="${ok?'yes':'no'}">${ok?'Sí':'No'}</td></tr>`;
+   d+=`<details><summary>Ejercicio ${k+1}: ${x[0]}</summary><p><b>Enunciado y datos:</b> ${x[3]}</p><p><b>Desarrollo independiente:</b> ${x[4]}</p></details>`});
+  $('vt').innerHTML=h;$('vd').innerHTML=d}},
+mn:{name:'Manual',html:()=>`<h2>Manual básico de uso</h2><div class="man">
+<p><b>1. Acceso:</b> abra la URL de GitHub Pages del proyecto en cualquier navegador.</p>
+<p><b>2. Operación:</b> elija la pestaña (interés compuesto, conversión, indexación, anualidades, perpetuidad). Seleccione la <i>variable a calcular</i>; solo se muestran los datos necesarios.</p>
+<p><b>3. Tasas:</b> escriba el valor en % (24 = 24 %). Elija el tipo (efectiva o nominal, vencida o anticipada) y su periodicidad. En nominales, la periodicidad es la de capitalización. La EA es una efectiva vencida anual.</p>
+<p><b>4. Periodicidades:</b> la calculadora convierte la tasa a la periodicidad del tiempo o de la cuota y muestra la tasa equivalente usada.</p>
+<p><b>5. Indexación:</b> DTF (T.A.) e IBR: se suma el spread en la misma modalidad y luego se convierte. IPC y UVR: (1+indicador)(1+spread) − 1, resultado en EA.</p>
+<p><b>6. Resultado:</b> se muestra la variable calculada, su valor y el procedimiento. Los mensajes en rojo indican datos inconsistentes.</p>
+<p><b>Limitaciones:</b> año de 365 días y 24 quincenas; las tasas deben ser mayores que 0 en anualidades y perpetuidades.</p></div>`,init(){}}
+};
+const nav=$('nav'),app=$('app');
+Object.entries(mods).forEach(([k,m])=>{const b=document.createElement('button');b.textContent=m.name;b.onclick=()=>go(k);nav.appendChild(b);
+ const s=document.createElement('div');s.className='card hide';s.id='m_'+k;s.innerHTML=m.html();app.appendChild(s)});
+Object.values(mods).forEach(m=>m.init());
+function go(k){[...nav.children].forEach((b,i)=>b.classList.toggle('on',Object.keys(mods)[i]==k));Object.keys(mods).forEach(x=>$('m_'+x).classList.toggle('hide',x!=k))}
+go('ic');
+</script>
+</body>
+</html>
